@@ -37,7 +37,7 @@ class Trip(Document):
 		if not self.advance_given_to_driver:
 			default_adv= frappe.db.get_single_value("Transport Settings","default_driver_advance_amount")
 			if default_adv:
-				self.advance_given_to_driver= default_adv
+				self.set_onload("default_driver_advance_amount", default_adv)
 		
 	def on_submit(self):
 		self.create_advance_jv()
@@ -48,6 +48,7 @@ class Trip(Document):
 		self.db_set("trip_status", "Open")
 		self.db_set("settlement_status", "Pending")
 		self.db_set("balance_amount", 0)
+		self.db_set("total_expense", 0)
 
 	def cancel_linked_jv(self, jv_name, fieldname):
 		if not jv_name:
@@ -70,6 +71,7 @@ class Trip(Document):
 			"voucher_type":"Cash Entry",
 			"posting_date": self.trip_date,
             "company": self.company,
+            "user_remark": f"Advance given to Driver {driver_name} for Trip {self.name}",
             "accounts": [
                 {
                     "account": driver_advance_acc,
@@ -115,9 +117,9 @@ class Trip(Document):
 		if self.settlement_jv and self.settlement_status!="Settled":
 			jv_read=frappe.db.get_value("Journal Entry",self.settlement_jv,"total_debit")
 			if jv_read:
-				self.balance_amount=0
-				self.settlement_status="Settled"
-				self.trip_status="Settled"
+				self.db_set("balance_amount", 0)
+				self.db_set("settlement_status", "Settled")
+				self.db_set("trip_status", "Settled")
 
 	def create_settlement_jv(self):
 		if self.settlement_jv:
@@ -131,36 +133,37 @@ class Trip(Document):
 
 		cash_account = self.get_cash_account()
 		driver_advance_account = self.get_driver_advance_acc()
+		driver_name=frappe.db.get_value("Employee",self.driver,"employee_name")
 		settlement_amount = abs(self.balance_amount)
 
 		if self.balance_amount < 0:
 			accounts = [
 				{
-					"account": cash_account,
+					"account": driver_advance_account,
 					"debit_in_account_currency": settlement_amount,
 					"credit_in_account_currency": 0,
-				},
-				{
-					"account": driver_advance_account,
-					"debit_in_account_currency": 0,
-					"credit_in_account_currency": settlement_amount,
 					"party_type": "Employee",
 					"party": self.driver,
+				},
+				{
+					"account": cash_account,
+					"debit_in_account_currency": 0,
+					"credit_in_account_currency": settlement_amount,
 				},
 			]
 		else:
 			accounts = [
 				{
-					"account": driver_advance_account,
+					"account": cash_account,
 					"debit_in_account_currency": settlement_amount,
 					"credit_in_account_currency": 0,
-					"party_type": "Employee",
-					"party": self.driver,
 				},
 				{
-					"account": cash_account,
+					"account": driver_advance_account,
 					"debit_in_account_currency": 0,
 					"credit_in_account_currency": settlement_amount,
+					"party_type": "Employee",
+					"party": self.driver,
 				},
 			]
 
@@ -179,6 +182,7 @@ class Trip(Document):
 		self.db_set("settlement_status", "Settled")
 		self.db_set("balance_amount", 0)
 		self.db_set("trip_status", "Settled")
+
 @frappe.whitelist()
 def create_settlejv(name):
     doc = frappe.get_doc("Trip", name)

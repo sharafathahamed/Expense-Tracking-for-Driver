@@ -60,13 +60,16 @@ class DriverExpenseEntry(Document):
 		accounts.append({
 			"account":driver_adv_account,
 			"debit_in_account_currency":0,
-			"credit_in_account_currency":self.total_amount
+			"credit_in_account_currency":self.total_amount,
+			"party_type":"Employee",
+			"party":self.driver
 		})
 		jv = frappe.get_doc({
 			"doctype":"Journal Entry",
 			"voucher_type": "Cash Entry",
             "posting_date": self.entry_date,
             "company": self.company,
+            "user_remark": f"Expenses by Driver {driver} for Trip {self.trip} on {self.entry_date}",
             "accounts": accounts
 		})
 		jv.insert(ignore_permissions=True)
@@ -128,16 +131,11 @@ class DriverExpenseEntry(Document):
 		trip.db_set("settlement_status", status)
 	
 	def validate_expense(self):
-		if not self.trip:
-			frappe.throw("Trip is required")
-		if not self.driver:
-			frappe.throw("Driver is required.")
-		if not self.company:
-			frappe.throw("Company is required.")
 		if not self.expense_details or len(self.expense_details)==0:
 			frappe.throw("Atleast One expense is required")
-		if not self.total_amount or self.total_amount<=0:
-			frappe.throw("Total Amount must be greater than 0")
+		trip_status=frappe.db.get_value("Trip",self.trip,"trip_status")
+		if trip_status not in ("On Trip","Completed"):
+			frappe.throw(f"Cannot submit expenses. Trip status is '{trip_status}'. Trip must be On Trip or Completed.")
 	
 	def get_driv_adv_account(self):
 		account=frappe.db.get_value("Account",{
@@ -146,5 +144,5 @@ class DriverExpenseEntry(Document):
             "is_group":0
 		},"name")
 		if not account:
-			frappe.throw("'driver expense' not found for our company, Check Chart of Accounts")
+			frappe.throw("Driver Advances account not found. Check Chart of Accounts.")
 		return account

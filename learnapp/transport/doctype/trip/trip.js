@@ -9,15 +9,15 @@ frappe.ui.form.on("Trip", {
         create_btn_forsettle(frm);
     }
 });
-function create_btn_forsettle(frm) {
-    if (
+function create_btn_forsettle(frm){
+    if(
         frm.doc.docstatus === 1 &&
         ["Company Owes Driver", "Driver Owes Company"].includes(frm.doc.settlement_status) &&
         !frm.doc.settlement_jv
     ) {
-        frm.add_custom_button("Create Settlement JV", function() {
+        frm.add_custom_button("Create Settlement JV", function(){
             frappe.call({
-                method: "frappe.transportation.doctype.trip.trip.create_settlejv",
+                method: "learnapp.transport.doctype.trip.trip.create_settlejv",
                 args: { name: frm.doc.name },
                 callback: function(r) {
                     if (!r.exc) {
@@ -44,7 +44,7 @@ function filterfor_driver(frm){
     frm.set_query("driver", function() {
         return {
             filters: {
-                "designation": "Driver",
+                "designation":"Driver",
                 "status": "Active"
             }
         };

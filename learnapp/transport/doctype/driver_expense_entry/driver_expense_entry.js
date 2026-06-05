@@ -4,8 +4,10 @@ frappe.ui.form.on("Driver Expense Entry", {
 	},
 	trip: function(frm){
         if(frm.doc.trip){
-            frappe.db.get_value("Trip",frm.doc.trip,"driver",function(val){
+            frappe.db.get_value("Trip",frm.doc.trip,["driver","company"],function(val){
                 frm.set_value("driver",val.driver);
+                frm.set_value("company",val.company);
+                set_expense_acc_query(frm);
             });
         }
     }
@@ -19,7 +21,7 @@ frappe.ui.form.on("Driver Expense Detail",{
     }
 });
 function set_expense_acc_query(frm){
-	frm.set_query("expense_account","expense_details",function() {
+	frm.set_query("expense_account","expense_details",function(){
 		return{
 			filters:{
 				company:frm.doc.company,
