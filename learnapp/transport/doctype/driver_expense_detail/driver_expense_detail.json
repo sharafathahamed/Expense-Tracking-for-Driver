@@ -1,0 +1,89 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-06-03 11:14:10.015319",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "expense_happened_for",
+  "expense_category_v_a",
+  "expense_category_p_s",
+  "expense_category_d_p",
+  "expense_account",
+  "description",
+  "amount",
+  "billreceipt_no"
+ ],
+ "fields": [
+  {
+   "fieldname": "expense_happened_for",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Expense Happened For",
+   "options": "Company - Vehicle & Asset\nCompany - Passenger Service\nDriver Personal Allowance"
+  },
+  {
+   "depends_on": "eval:doc.expense_happened_for==\"Company - Vehicle & Asset\"",
+   "fieldname": "expense_category_v_a",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Expense Category for Vehicle & Asset",
+   "options": "Fuel\nPuncture\nVehicle Repair & Maintenance\nToll & Parking\nVehicle Hire Charges\nothers"
+  },
+  {
+   "depends_on": "eval:doc.expense_happened_for==\"Company - Passenger Service\"",
+   "fieldname": "expense_category_p_s",
+   "fieldtype": "Select",
+   "label": "Expense Category for Passenger Service",
+   "options": "Passenger Water & Snacks\nMiscellaneous"
+  },
+  {
+   "depends_on": "eval:doc.expense_happened_for==\"Driver Personal Allowance\"",
+   "fieldname": "expense_category_d_p",
+   "fieldtype": "Select",
+   "label": "Expense Category for Driver Personal",
+   "options": "Driver Food & Tea\nDriver Accommodation"
+  },
+  {
+   "fieldname": "expense_account",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Expense Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Description"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount"
+  },
+  {
+   "fieldname": "billreceipt_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Bill/Receipt No."
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-06-05 11:59:19.758086",
+ "modified_by": "Administrator",
+ "module": "Transport",
+ "name": "Driver Expense Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,203 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "TRIP-.####",
+ "creation": "2026-06-03 10:55:52.829928",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_2dgz",
+  "company",
+  "trip_date",
+  "trip_status",
+  "driver",
+  "amended_from",
+  "vehicle_information_section",
+  "vehicle_type",
+  "bus_asset",
+  "column_break_knog",
+  "rented_vehicle_number",
+  "rental_owner",
+  "rental_amount",
+  "advance_information_section",
+  "advance_given_to_driver",
+  "advance_jv",
+  "column_break_zdtv",
+  "total_expense",
+  "balance_amount",
+  "settlement_status",
+  "settlement_jv"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_2dgz",
+   "fieldtype": "Section Break",
+   "label": "Trip Information"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "trip_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Trip Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "trip_status",
+   "fieldtype": "Select",
+   "label": "Trip Status",
+   "options": "Open\nOn Trip\nCompleted\nSettled"
+  },
+  {
+   "fieldname": "driver",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Driver",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Trip",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "vehicle_information_section",
+   "fieldtype": "Section Break",
+   "label": "Vehicle Information",
+   "options": "Own\nRental"
+  },
+  {
+   "fieldname": "vehicle_type",
+   "fieldtype": "Select",
+   "label": "Vehicle Type",
+   "options": "Own Bus\nRented Bus"
+  },
+  {
+   "depends_on": "eval:doc.vehicle_type == \"Own Bus\"",
+   "fieldname": "bus_asset",
+   "fieldtype": "Link",
+   "label": "Bus Asset",
+   "mandatory_depends_on": "eval:doc.vehicle_type == \"Own Bus\"",
+   "options": "Asset"
+  },
+  {
+   "fieldname": "column_break_knog",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.vehicle_type == \"Rented Bus\"",
+   "fieldname": "rented_vehicle_number",
+   "fieldtype": "Data",
+   "label": "Rented Vehicle Number",
+   "mandatory_depends_on": "eval:doc.vehicle_type == \"Rented Bus\""
+  },
+  {
+   "depends_on": "eval:doc.vehicle_type == \"Rented Bus\"",
+   "fieldname": "rental_owner",
+   "fieldtype": "Data",
+   "label": "Rental Owner"
+  },
+  {
+   "depends_on": "eval:doc.vehicle_type == \"Rented Bus\"",
+   "fieldname": "rental_amount",
+   "fieldtype": "Currency",
+   "label": "Rental Amount",
+   "mandatory_depends_on": "eval:doc.vehicle_type == \"Rented Bus\""
+  },
+  {
+   "fieldname": "advance_information_section",
+   "fieldtype": "Section Break",
+   "label": "Advance Information"
+  },
+  {
+   "fieldname": "advance_given_to_driver",
+   "fieldtype": "Currency",
+   "label": "Advance Given to Driver"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "advance_jv",
+   "fieldtype": "Link",
+   "label": "Advance JV",
+   "options": "Journal Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_zdtv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "total_expense",
+   "fieldtype": "Currency",
+   "label": "Total Expense",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "balance_amount",
+   "fieldtype": "Currency",
+   "label": "Balance Amount",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "settlement_status",
+   "fieldtype": "Select",
+   "label": "Settlement Status",
+   "options": "Pending\nDriver Owes Company\nCompany Owes Driver\nSettled"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "settlement_jv",
+   "fieldtype": "Link",
+   "label": "Settlement JV",
+   "options": "Journal Entry",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-06-05 12:02:06.913366",
+ "modified_by": "Administrator",
+ "module": "Transport",
+ "name": "Trip",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
