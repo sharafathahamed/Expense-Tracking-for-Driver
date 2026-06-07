@@ -78,57 +78,17 @@ class DriverExpenseEntry(Document):
 		self.db_set("journal_entry",jv.name)
 
 	def get_expense_category(self, row):
-		category_map = {
-			"Company - Vehicle & Asset": row.expense_category_v_a,
-			"Company - Passenger Service": row.expense_category_p_s,
-			"Driver Personal Allowance": row.expense_category_d_p,
-		}
-		return category_map.get(row.expense_happened_for) or next(
-			(
-				category
-				for category in [
-					row.expense_category_v_a,
-					row.expense_category_p_s,
-					row.expense_category_d_p,
-				]
-				if category
-			),
-			None,
-		)
+		return row.expense_category
 	
 	def update_trip_totals(self):
 		trip=frappe.get_doc("Trip",self.trip)
 		new_total=(trip.total_expense or 0)+self.total_amount
-		balance=(trip.advance_given_to_driver or 0)- new_total
-
-		if balance>0:
-			status="Driver Owes Company"
-		elif balance<0:
-			status="Company Owes Driver"
-		else:
-			status="Settled"
-		
-		trip.db_set("total_expense",new_total)
-		trip.db_set("balance_amount", balance)
-		trip.db_set("settlement_status", status)
+		trip.update_expense_totals(new_total)
 
 	def reverse_trip_totals(self):
 		trip=frappe.get_doc("Trip",self.trip)
 		new_total=(trip.total_expense or 0)-self.total_amount
-		balance=(trip.advance_given_to_driver or 0)- new_total
-
-		if new_total <= 0:
-			status = "Pending"
-		elif balance>0:
-			status="Driver Owes Company"
-		elif balance<0:
-			status="Company Owes Driver"
-		else:
-			status="Settled"
-		
-		trip.db_set("total_expense",new_total)
-		trip.db_set("balance_amount", balance)
-		trip.db_set("settlement_status", status)
+		trip.update_expense_totals(new_total)
 	
 	def validate_expense(self):
 		if not self.expense_details or len(self.expense_details)==0:

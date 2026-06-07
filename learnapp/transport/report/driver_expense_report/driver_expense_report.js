@@ -28,6 +28,18 @@ frappe.query_reports["Driver Expense Report"] = {
             fieldtype:"Link",
             options:"Employee",
             filters:{"designation":"Driver"}
+        },
+        {
+            fieldname:"expense_happened_for",
+            label: "Expense Happened For",
+            fieldtype:"Select",
+            options:"\nCompany - Vehicle & Asset\nCompany - Passenger Service\nDriver Personal Allowance",
+        },
+        {
+            fieldname:"expense_category",
+            label: "Expense Category",
+            fieldtype:"Link",
+            options:"Expense Category"
         }
     ]
 };

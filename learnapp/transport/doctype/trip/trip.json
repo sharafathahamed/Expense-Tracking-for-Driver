@@ -19,6 +19,7 @@
   "rented_vehicle_number",
   "rental_owner",
   "rental_amount",
+  "rental_jv",
   "advance_information_section",
   "advance_given_to_driver",
   "advance_jv",
@@ -117,6 +118,15 @@
    "fieldtype": "Currency",
    "label": "Rental Amount",
    "mandatory_depends_on": "eval:doc.vehicle_type == \"Rented Bus\""
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.vehicle_type == \"Rented Bus\"",
+   "fieldname": "rental_jv",
+   "fieldtype": "Link",
+   "label": "Rental JV",
+   "options": "Journal Entry",
+   "read_only": 1
   },
   {
    "fieldname": "advance_information_section",
