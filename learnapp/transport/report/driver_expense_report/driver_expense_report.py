@@ -5,9 +5,10 @@ import frappe
 
 
 def execute(filters=None):
-    columns = get_columns()
-    data = get_data(filters)
-    return columns, data
+    columns=get_columns()
+    data=get_data(filters)
+    chart=get_chart(data)
+    return columns, data, None, chart
 
 def get_columns():
     return [
@@ -62,7 +63,7 @@ def get_columns():
     ]
 
 def get_data(filters):
-    cond = get_conditions(filters)
+    cond=get_conditions(filters)
 
     raw = frappe.db.sql(f"""
         select dee.entry_date, dee.trip,dee.driver,
@@ -92,7 +93,6 @@ def get_data(filters):
     bill_seen={}
     driver_day_totals ={}
     driver_day_personal ={}
-    driver_day_misc ={}
     result= []
 
     for row in raw:
@@ -102,23 +102,17 @@ def get_data(filters):
         if row.expense_happened_for=="Driver Personal Allowance":
             driver_day_personal[day_key]=driver_day_personal.get(day_key, 0)+1
 
-        if row.expense_category=="Miscellaneous":
-            driver_day_misc[day_key]=driver_day_misc.get(day_key, 0)+1
-
         if row.billreceipt_no:
             bill_key=f"{row.driver}_{str(row.billreceipt_no).strip()}"
-            bill_seen[bill_key]=bill_seen.get(bill_key, 0) + 1
-
+            bill_seen[bill_key]=bill_seen.get(bill_key, 0)+1
+    
     for row in raw:
         defect=[]
         threshold=thresh.get(row.expense_category)
         day_key=f"{row.driver}_{row.entry_date}"
-
+        if not row.expense_category: defect.append("No expense category")
         if threshold and row.amount >threshold:
             defect.append(f"High amount (limit ₹{threshold})")
-
-        if not row.billreceipt_no and row.amount >200:
-            defect.append("No bill/receipt")
 
         key = f"{row.driver}_{row.entry_date}_{row.expense_category}"
         if key in seen:
@@ -126,7 +120,7 @@ def get_data(filters):
         else:
             seen[key]=True
 
-        if (row.expense_happened_for=="Driver Personal Allowance" and row.amount> 500):
+        if row.expense_happened_for=="Driver Personal Allowance" and row.amount> 500:
             defect.append("High personal expense")
 
         if row.billreceipt_no:
@@ -134,22 +128,8 @@ def get_data(filters):
             if bill_seen.get(bill_key, 0)>1:
                 defect.append("Repeated bill/receipt number")
 
-        if (
-            not row.billreceipt_no
-            and row.amount>=500
-            and float(row.amount).is_integer()
-            and int(row.amount)%100==0
-        ):
-            defect.append("Rounded amount without bill")
-
-        if (
-            row.expense_happened_for=="Driver Personal Allowance"
-            and driver_day_personal.get(day_key, 0) > 1
-        ):
+        if row.expense_happened_for=="Driver Personal Allowance" and driver_day_personal.get(day_key, 0)>2:
             defect.append("Multiple personal claims same day")
-
-        if row.expense_category == "Miscellaneous" and driver_day_misc.get(day_key, 0) > 1:
-            defect.append("Multiple miscellaneous claims same day")
 
         if driver_day_totals.get(day_key, 0) > 7000:
             defect.append("High total claimed in a single day")
@@ -157,21 +137,49 @@ def get_data(filters):
         if defect:
             row.anomaly=" | ".join(defect)
             result.append(row)
-
     return result
 
 def get_conditions(filters):
     cond = ""
-    if filters.get("company"):
-        cond+=" AND dee.company = %(company)s"
-    if filters.get("from_date"):
-        cond+= " AND dee.entry_date >= %(from_date)s"
-    if filters.get("to_date"):
-        cond+= " AND dee.entry_date <= %(to_date)s"
-    if filters.get("driver"):
-        cond +=" AND dee.driver = %(driver)s"
-    if filters.get("expense_happened_for"):
-        cond += " AND ded.expense_happened_for = %(expense_happened_for)s"
-    if filters.get("expense_category"):
-        cond += " AND ded.expense_category = %(expense_category)s"
+    if filters.get("company"): cond+=" AND dee.company = %(company)s"
+    if filters.get("from_date"):cond+= " AND dee.entry_date >= %(from_date)s"
+    if filters.get("to_date"): cond+=" AND dee.entry_date <= %(to_date)s"
+    if filters.get("driver"):cond+=" AND dee.driver = %(driver)s"
+    if filters.get("expense_happened_for"):cond += " AND ded.expense_happened_for = %(expense_happened_for)s"
+    if filters.get("expense_category"):cond += " AND ded.expense_category = %(expense_category)s"
     return cond
+
+def get_chart(data):
+    if not data: return None
+
+    categ_map={}
+    for row in data:
+        category = row.expense_category or "Uncategorized"
+        if category not in categ_map: categ_map[category]={"count": 0, "amount": 0}
+
+        categ_map[category]["count"]+=1
+        categ_map[category]["amount"]+=row.amount or 0
+
+    sorted_categories = sorted(
+        categ_map.items(),
+        key=lambda item: (item[1]["count"], item[1]["amount"]),
+        reverse=True,
+    )
+
+    labels = [category for category, val in sorted_categories]
+    anomaly_counts = [values["count"] for categ, values in sorted_categories]
+    anomaly_amounts = [values["amount"] for categ, values in sorted_categories]
+
+    return {
+        "data": {
+            "labels": labels,
+            "datasets": [
+                {
+                    "name": "Anomalous Amount",
+                    "values": anomaly_amounts,
+                },
+            ],
+        },
+        "type": "donut",
+        "title": "Driver Expense Anomaly Share by Category",
+    }
