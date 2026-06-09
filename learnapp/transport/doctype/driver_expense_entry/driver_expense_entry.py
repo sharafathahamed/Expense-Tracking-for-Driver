@@ -12,7 +12,7 @@ class DriverExpenseEntry(Document):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.transportation.doctype.driver_expense_detail.driver_expense_detail import DriverExpenseDetail
+		from learnapp.transport.doctype.driver_expense_detail.driver_expense_detail import DriverExpenseDetail
 		from frappe.types import DF
 
 		amended_from: DF.Link | None
@@ -24,6 +24,12 @@ class DriverExpenseEntry(Document):
 		total_amount: DF.Currency
 		trip: DF.Link | None
 	# end: auto-generated types
+
+	def validate(self):
+		self.calculate_total()
+
+	def calculate_total(self):
+		self.total_amount=sum(row.amount or 0 for row in self.expense_details)
 
 	def on_submit(self):
 		self.create_expense_jv()
@@ -45,12 +51,11 @@ class DriverExpenseEntry(Document):
 		driver_adv_account=self.get_driv_adv_account()
 		accounts=[]
 		for row in self.expense_details:
-			expense_category = self.get_expense_category(row)
 			if not row.expense_account:
 				frappe.throw(f"Row {row.idx}:Expense Account is missing.")
 			if not row.amount or row.amount<=0:
 				frappe.throw(f"Row {row.idx}:Amount should be greater than 0.")
-			if not expense_category:
+			if not row.expense_category:
 				frappe.throw(f"Row {row.idx}:Expense Category is missing.")
 			accounts.append({
 				"account":row.expense_account,
@@ -77,9 +82,6 @@ class DriverExpenseEntry(Document):
 
 		self.db_set("journal_entry",jv.name)
 
-	def get_expense_category(self, row):
-		return row.expense_category
-	
 	def update_trip_totals(self):
 		trip=frappe.get_doc("Trip",self.trip)
 		new_total=(trip.total_expense or 0)+self.total_amount
@@ -87,7 +89,7 @@ class DriverExpenseEntry(Document):
 
 	def reverse_trip_totals(self):
 		trip=frappe.get_doc("Trip",self.trip)
-		new_total=(trip.total_expense or 0)-self.total_amount
+		new_total=max((trip.total_expense or 0)-self.total_amount,0)
 		trip.update_expense_totals(new_total)
 	
 	def validate_expense(self):

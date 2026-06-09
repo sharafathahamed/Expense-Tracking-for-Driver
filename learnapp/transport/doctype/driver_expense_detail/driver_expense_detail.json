@@ -1,6 +1,5 @@
 {
  "actions": [],
- "allow_rename": 1,
  "creation": "2026-06-03 11:14:10.015319",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -20,14 +19,18 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Expense Happened For",
-   "options": "Company - Vehicle & Asset\nCompany - Passenger Service\nDriver Personal Allowance"
+   "options": "Company - Vehicle & Asset\nCompany - Passenger Service\nDriver Personal Allowance",
+   "reqd": 1
   },
   {
+   "fetch_from": "expense_category.default_account_name",
+   "fetch_if_empty": 1,
    "fieldname": "expense_account",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Expense Account",
-   "options": "Account"
+   "options": "Account",
+   "reqd": 1
   },
   {
    "fieldname": "description",
@@ -39,7 +42,8 @@
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Amount"
+   "label": "Amount",
+   "reqd": 1
   },
   {
    "fieldname": "billreceipt_no",
@@ -65,7 +69,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-07 19:10:38.159276",
+ "modified": "2026-06-09 15:10:25.856984",
  "modified_by": "Administrator",
  "module": "Transport",
  "name": "Driver Expense Detail",

@@ -6,7 +6,36 @@
  "disabled": 0,
  "docstatus": 0,
  "doctype": "Report",
- "filters": [],
+ "filters": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "from_date",
+   "fieldtype": "Date",
+   "label": "From Date"
+  },
+  {
+   "fieldname": "to_date",
+   "fieldtype": "Date",
+   "label": "To Date"
+  },
+  {
+   "fieldname": "driver",
+   "fieldtype": "Link",
+   "label": "Driver",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "settlement_status",
+   "fieldtype": "Select",
+   "label": "Settlement Status",
+   "options": "\nPending\nDriver Owes Company\nCompany Owes Driver\nSettled"
+  }
+ ],
  "idx": 0,
  "is_standard": "Yes",
  "letter_head": null,

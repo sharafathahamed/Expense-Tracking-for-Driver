@@ -34,6 +34,30 @@ class Trip(Document):
 	# end: auto-generated types
 
 	
+	def validate(self):
+		self.validate_vehicle_info()
+		self.check_duplicate_trip()
+
+	def validate_vehicle_info(self):
+		if self.vehicle_type == "Own Bus":
+			if not self.bus_asset:
+				frappe.throw("Bus Asset is required for Own Bus trips.")
+		elif self.vehicle_type == "Rented Bus":
+			if not self.rented_vehicle_number:
+				frappe.throw("Rented Vehicle Number is required for Rented Bus trips.")
+			if not self.rental_amount or self.rental_amount<=0:
+				frappe.throw("Rental Amount is required for Rented Bus trips.")
+
+	def check_duplicate_trip(self):
+		existing=frappe.db.exists("Trip",{
+			"driver":self.driver,
+			"trip_date":self.trip_date,
+			"trip_status":["in",["Open","On Trip"]],
+			"name":["!=",self.name or ""]
+		})
+		if existing:
+			frappe.throw(f"Driver already has an active trip ({existing}) on {self.trip_date}.")
+
 	def onload(self):
 		if not self.advance_given_to_driver:
 			default_adv= frappe.db.get_single_value("Transport Settings","default_driver_advance_amount")
@@ -41,11 +65,13 @@ class Trip(Document):
 				self.set_onload("default_driver_advance_amount", default_adv)
 		
 	def on_submit(self):
-		self.create_advance_jv()
+		if self.advance_given_to_driver and self.advance_given_to_driver>0:
+			self.create_advance_jv()
 		self.create_rental_jv()
 		self.update_expense_totals(self.get_initial_total_expense())
 	
 	def on_cancel(self):
+		self.cancel_driver_expense_entries()
 		self.cancel_linked_jv(self.settlement_jv, "settlement_jv")
 		self.cancel_linked_jv(self.rental_jv, "rental_jv")
 		self.cancel_linked_jv(self.advance_jv, "advance_jv")
@@ -53,6 +79,15 @@ class Trip(Document):
 		self.db_set("settlement_status", "Pending")
 		self.db_set("balance_amount", 0)
 		self.db_set("total_expense", 0)
+
+	def cancel_driver_expense_entries(self):
+		entries=frappe.get_all("Driver Expense Entry",filters={
+			"trip":self.name,
+			"docstatus":1
+		},pluck="name")
+		for name in entries:
+			doc=frappe.get_doc("Driver Expense Entry",name)
+			doc.cancel()
 
 	def cancel_linked_jv(self, jv_name, fieldname):
 		if not jv_name:
@@ -98,7 +133,7 @@ class Trip(Document):
 		self.db_set("trip_status","On Trip")
 
 	def create_rental_jv(self):
-		if self.vehicle_type != "Rented Bus":
+		if self.vehicle_type!="Rented Bus":
 			return
 
 		if self.rental_jv:
@@ -119,14 +154,14 @@ class Trip(Document):
 			"user_remark": f"Rental expense paid to {owner} for Trip {self.name}",
 			"accounts": [
 				{
-					"account": expense_account,
-					"debit_in_account_currency": self.rental_amount,
-					"credit_in_account_currency": 0,
+					"account":expense_account,
+					"debit_in_account_currency":self.rental_amount,
+					"credit_in_account_currency":0,
 				},
 				{
-					"account": cash_account,
-					"debit_in_account_currency": 0,
-					"credit_in_account_currency": self.rental_amount,
+					"account":cash_account,
+					"debit_in_account_currency":0,
+					"credit_in_account_currency":self.rental_amount,
 				},
 			],
 		})
@@ -152,7 +187,7 @@ class Trip(Document):
 			"is_group":0,
 		},"name")
 		if not account:
-			frappe.throw(f"Driver account is not available")
+			frappe.throw("Driver Advances account not found. Check Chart of Accounts.")
 		return account
 
 	def get_rental_expense_account(self):
@@ -214,8 +249,8 @@ class Trip(Document):
 	
 	def on_update_after_submit(self):
 		if self.settlement_jv and self.settlement_status!="Settled":
-			jv_read=frappe.db.get_value("Journal Entry",self.settlement_jv,"total_debit")
-			if jv_read:
+			jv_docstatus=frappe.db.get_value("Journal Entry",self.settlement_jv,"docstatus")
+			if jv_docstatus == 1:
 				self.db_set("balance_amount", 0)
 				self.db_set("settlement_status", "Settled")
 				self.db_set("trip_status", "Settled")
@@ -271,6 +306,7 @@ class Trip(Document):
 			"voucher_type": "Cash Entry",
 			"posting_date": frappe.utils.today(),
 			"company": self.company,
+			"user_remark": f"Settlement for Trip {self.name} - Driver {driver_name}",
 			"accounts": accounts,
 		})
 

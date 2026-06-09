@@ -5,6 +5,7 @@ import frappe
 
 
 def execute(filters=None):
+    filters = filters or {}
     columns = get_columns()
     data = get_data(filters)
     chart = get_chart(data)
@@ -13,39 +14,52 @@ def execute(filters=None):
 def get_columns():
     return [
         {
-            "label": "Expense Account",
+            "label":"Expense Account",
             "fieldname": "expense_account",
-            "fieldtype": "Link",
+            "fieldtype":"Link",
             "options": "Account",
+            "width": 220
+        },
+        {
+            "label": "Expense Category",
+            "fieldname": "expense_category",
+            "fieldtype": "Link",
+            "options": "Expense Category",
+            "width": 160
         },
         {
             "label": "No. of Transactions",
             "fieldname": "transaction_count",
             "fieldtype": "Int",
+            "width": 140
         },
         {
             "label": "Total Amount Spent",
             "fieldname": "total_amount",
-            "fieldtype": "Currency"
+            "fieldtype": "Currency",
+            "width": 150
         },
         {
-            "label": "Average Per Trip",
+            "label": "Average Per Transaction",
             "fieldname": "avg_per_trip",
-            "fieldtype": "Currency"
+            "fieldtype": "Currency",
+            "width": 170
         },
         {
             "label": "% of Total Expense",
             "fieldname": "percentage",
-            "fieldtype": "Percent"
+            "fieldtype": "Percent",
+            "width": 140
         }
     ]
 
 def get_data(filters):
-    conditions= get_conditions(filters)
+    conditions=get_conditions(filters)
 
-    sqll=frappe.db.sql(f"""
-        select 
+    data=frappe.db.sql(f"""
+        select
             ded.expense_account,
+            ded.expense_category,
             count(ded.name) as transaction_count,
             sum(ded.amount) as total_amount,
             avg(ded.amount) as avg_per_trip
@@ -54,26 +68,29 @@ def get_data(filters):
         where
             dee.docstatus = 1
             {conditions}
-        group by ded.expense_account
+        group by ded.expense_account, ded.expense_category
         order by total_amount desc
     """, filters, as_dict=True)
-    grand_total=sum(r.total_amount or 0 for r in sqll)
 
-    for row in sqll:
+    grand_total=sum(r.total_amount or 0 for r in data)
+
+    for row in data:
         row.percentage = round((row.total_amount/grand_total* 100) if grand_total else 0, 2)
 
-    return sqll
+    return data
 
 def get_conditions(filters):
     conditions = ""
     if filters.get("company"):
-        conditions+= " AND dee.company = %(company)s"
+        conditions+= " and dee.company = %(company)s"
     if filters.get("from_date"):
-        conditions+=" AND dee.entry_date >= %(from_date)s"
+        conditions+=" and dee.entry_date >= %(from_date)s"
     if filters.get("to_date"):
-        conditions+= " AND dee.entry_date <= %(to_date)s"
+        conditions+= " and dee.entry_date <= %(to_date)s"
     if filters.get("expense_happened_for"):
-        conditions += " AND ded.expense_happened_for = %(expense_happened_for)s"
+        conditions += " and ded.expense_happened_for = %(expense_happened_for)s"
+    if filters.get("expense_category"):
+        conditions += " and ded.expense_category = %(expense_category)s"
     return conditions
 
 def get_chart(data):
@@ -81,10 +98,12 @@ def get_chart(data):
         return None
     return {
         "data": {
-            "labels":[r.expense_account for r in data],
+            "labels":[row.expense_account for row in data],
             "datasets":[{
                 "name": "Amount Spent",
-                "values": [r.total_amount for r in data]
+                "values": [row.total_amount for row in data]
             }]
-        },"type": "bar","title": "Expense Account Wise Spending"
+        },
+        "type": "bar",
+        "title": "Expense Account Wise Spending"
     }

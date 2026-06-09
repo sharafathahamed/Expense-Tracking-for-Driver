@@ -1,6 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "DEE-.###",
  "creation": "2026-06-03 11:07:46.081551",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -36,20 +37,26 @@
   {
    "fieldname": "company",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Company",
-   "options": "Company"
+   "options": "Company",
+   "reqd": 1
   },
   {
    "default": "Today",
    "fieldname": "entry_date",
    "fieldtype": "Date",
-   "label": "Entry Date"
+   "in_list_view": 1,
+   "label": "Entry Date",
+   "reqd": 1
   },
   {
    "fieldname": "trip",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Trip",
-   "options": "Trip"
+   "options": "Trip",
+   "reqd": 1
   },
   {
    "fieldname": "column_break_qacu",
@@ -58,8 +65,10 @@
   {
    "fieldname": "driver",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Driver",
-   "options": "Employee"
+   "options": "Employee",
+   "reqd": 1
   },
   {
    "fieldname": "expense_details_section",
@@ -83,17 +92,19 @@
    "fieldname": "journal_entry",
    "fieldtype": "Link",
    "label": "Journal Entry",
-   "options": "Journal Entry"
+   "options": "Journal Entry",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-06-05 11:59:29.077991",
+ "modified": "2026-06-09 16:18:14.230144",
  "modified_by": "Administrator",
  "module": "Transport",
  "name": "Driver Expense Entry",
+ "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [
   {
