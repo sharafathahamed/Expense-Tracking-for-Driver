@@ -14,63 +14,53 @@ def get_columns():
             "label": "Trip",
             "fieldname": "trip",
             "fieldtype":"Link",
-            "options": "Trip",
-            "width": 130
+            "options": "Trip"
         },
         {
             "label":"Trip Date",
             "fieldname":"trip_date",
-            "fieldtype":"Date",
-            "width": 100
+            "fieldtype":"Date"
         },
         {
             "label":"Driver",
             "fieldname":"driver",
             "fieldtype":"Link",
-            "options": "Employee",
-            "width": 120
+            "options": "Employee"
         },
         {
             "label":"Driver Name",
             "fieldname":"driver_name",
-            "fieldtype":"Data",
-            "width": 150
+            "fieldtype":"Data"
         },
         {
             "label":"Vehicle Type",
             "fieldname":"vehicle_type",
-            "fieldtype":"Data",
-            "width": 110
+            "fieldtype":"Data"
         },
         {
             "label":"Advance Given",
             "fieldname":"advance_given",
-            "fieldtype":"Currency",
-            "width": 130
+            "fieldtype":"Currency"
         },
         {
             "label":"Actual Spent",
             "fieldname":"actual_spent",
-            "fieldtype":"Currency",
-            "width": 130
+            "fieldtype":"Currency"
         },
         {
             "label":"Difference",
             "fieldname":"difference",
-            "fieldtype":"Currency",
-            "width": 120
+            "fieldtype":"Currency"
         },
         {
             "label":"Advance Sufficient?",
             "fieldname":"advance_sufficient",
-            "fieldtype":"Data",
-            "width": 140
+            "fieldtype":"Data"
         },
         {
             "label":"Settlement Status",
             "fieldname":"settlement_status",
-            "fieldtype":"Data",
-            "width": 150
+            "fieldtype":"Data"
         }
     ]
 
@@ -119,10 +109,12 @@ def get_summary(data):
     total_diff=total_advance-total_spent
     insufficient_count=sum(1 for row in data if (row.difference)<0)
     excess_count=sum(1 for row in data if (row.difference)>0)
-
+    adv=frappe.db.get_single_value("Transport Settings","default_driver_advance_amount")
+    
     insufficient_trips=[abs(row.difference) for row in data if (row.difference)<0]
     if insufficient_trips:
         avg_increase=sum(insufficient_trips)/len(insufficient_trips)  
+        adv_tobGiven= round(adv+avg_increase)
     else: 
         avg_increase=0
 
@@ -154,6 +146,11 @@ def get_summary(data):
             "value":avg_increase,
             "datatype":"Currency",
             "indicator":"Red" if avg_increase>0 else "Green"
+        },
+        {
+            "label":"Advance to be Given",
+            "value":adv_tobGiven,
+            "datatype":"Currency",
         },
         {
             "label":"Trips with Excess Advance",

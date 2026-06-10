@@ -53,7 +53,7 @@ class Trip(Document):
 			"driver":self.driver,
 			"trip_date":self.trip_date,
 			"trip_status":["in",["Open","On Trip"]],
-			"name":["!=",self.name or ""]
+			"name":["!=",self.name]
 		})
 		if existing:
 			frappe.throw(f"Driver already has an active trip ({existing}) on {self.trip_date}.")
@@ -68,7 +68,7 @@ class Trip(Document):
 		if self.advance_given_to_driver and self.advance_given_to_driver>0:
 			self.create_advance_jv()
 		self.create_rental_jv()
-		self.update_expense_totals(self.get_initial_total_expense())
+		self.update_expense_totals(self.get_rental_expense_component())
 	
 	def on_cancel(self):
 		self.cancel_driver_expense_entries()
@@ -220,9 +220,6 @@ class Trip(Document):
 		if self.vehicle_type == "Rented Bus" and self.rental_jv and self.rental_amount:
 			return self.rental_amount
 		return 0
-
-	def get_initial_total_expense(self):
-		return self.get_rental_expense_component()
 
 	def get_settlement_snapshot(self, total_expense=None):
 		total_expense = total_expense if total_expense is not None else (self.total_expense or 0)

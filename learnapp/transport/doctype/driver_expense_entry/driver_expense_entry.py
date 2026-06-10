@@ -74,7 +74,6 @@ class DriverExpenseEntry(Document):
 			"voucher_type": "Cash Entry",
             "posting_date": self.entry_date,
             "company": self.company,
-            "user_remark": f"Expenses by Driver {driver} for Trip {self.trip} on {self.entry_date}",
             "accounts": accounts
 		})
 		jv.insert(ignore_permissions=True)
@@ -84,12 +83,12 @@ class DriverExpenseEntry(Document):
 
 	def update_trip_totals(self):
 		trip=frappe.get_doc("Trip",self.trip)
-		new_total=(trip.total_expense or 0)+self.total_amount
+		new_total=trip.total_expense+self.total_amount
 		trip.update_expense_totals(new_total)
 
 	def reverse_trip_totals(self):
 		trip=frappe.get_doc("Trip",self.trip)
-		new_total=max((trip.total_expense or 0)-self.total_amount,0)
+		new_total=max(trip.total_expense-self.total_amount,0)
 		trip.update_expense_totals(new_total)
 	
 	def validate_expense(self):
@@ -97,7 +96,7 @@ class DriverExpenseEntry(Document):
 			frappe.throw("Atleast One expense is required")
 		trip_status=frappe.db.get_value("Trip",self.trip,"trip_status")
 		if trip_status not in ("On Trip","Completed"):
-			frappe.throw(f"Cannot submit expenses. Trip status is '{trip_status}'. Trip must be On Trip or Completed.")
+			frappe.throw(f"Cannot submit expenses. Trip status is '{trip_status}'")
 	
 	def get_driv_adv_account(self):
 		account=frappe.db.get_value("Account",{

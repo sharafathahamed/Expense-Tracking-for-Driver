@@ -159,12 +159,12 @@ def get_data(filters):
     return result
 
 def get_conditions(filters):
-    cond = ""
+    cond=""
     if filters.get("company"): cond+=" and dee.company = %(company)s"
     if filters.get("from_date"):cond+= " and dee.entry_date >= %(from_date)s"
     if filters.get("to_date"): cond+=" and dee.entry_date <= %(to_date)s"
     if filters.get("driver"):cond+=" and dee.driver = %(driver)s"
-    if filters.get("expense_happened_for"):cond+=" and ded.expense_happened_for = %(expense_happened_for)s"
+    if filters.get("expense_happened_for"):cond+= " and ded.expense_happened_for = %(expense_happened_for)s"
     if filters.get("expense_category"):cond+=" and ded.expense_category = %(expense_category)s"
     return cond
 
