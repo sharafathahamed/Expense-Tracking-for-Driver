@@ -32,7 +32,7 @@ def create_stock_entry(entry_type, company, item_code, qty, s_warehouse=None, t_
 	if t_warehouse:
 		item["t_warehouse"] = t_warehouse
 	se.append("items", item)
-	se.insert(ignore_permissions=True)
+	se.insert()
 	se.submit()
 	return se
 
