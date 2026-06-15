@@ -65,40 +65,37 @@ def get_columns():
     ]
 
 def get_data(filters):
-    conditions = get_conditions(filters)
+	conditions=get_conditions(filters)
 
-    data = frappe.db.sql(f"""
-        select t.name as trip, t.trip_date, t.driver,
-		e.employee_name as driver_name,
-		t.vehicle_type,
-		t.advance_given_to_driver as advance_given,
-		t.total_expense as actual_spent,
-		t.rental_amount, t.rental_jv,
-		t.settlement_status
-        from `tabTrip` t
-        inner join `tabEmployee` e on e.name = t.driver
-        where
-		t.docstatus = 1
-		and t.total_expense > 0
-		{conditions}
-        order by
-            t.trip_date desc
-    """, filters, as_dict=True)
+	data=frappe.db.sql(f"""
+		select
+			t.name as trip,t.trip_date,t.driver,
+			e.employee_name as driver_name,
+			t.vehicle_type,t.advance_given_to_driver as advance_given, t.settlement_status,
+			if(t.vehicle_type = 'Rented Bus' and t.rental_jv is not null,
+			t.total_expense-t.rental_amount,
+			t.total_expense
+			) as actual_spent,
+			if(t.vehicle_type = 'Rented Bus' and t.rental_jv is not null,
+			t.advance_given_to_driver-(t.total_expense-t.rental_amount),
+			t.advance_given_to_driver-t.total_expense
+			) as difference,
 
-    for row in data:
-        if row.vehicle_type == "Rented Bus" and row.rental_jv:
-            row.actual_spent=(row.actual_spent or 0)-(row.rental_amount or 0)
-        row.difference=(row.advance_given or 0)-(row.actual_spent or 0)
-        diff=row.difference
-        if diff>500:
-            row.advance_sufficient="Excess Advance"
-        elif diff>=0:
-            row.advance_sufficient="Sufficient"
-        elif diff>=-500:
-            row.advance_sufficient="Slightly Low"
-        else:
-            row.advance_sufficient="Insufficient"
-    return data
+			if(t.advance_given_to_driver-t.total_expense>500,'Excess Advance',
+			if(t.advance_given_to_driver-t.total_expense>=0,'Sufficient',
+			if(t.advance_given_to_driver-t.total_expense>=-500,'Slightly Low','Insufficient'
+			))) as advance_sufficient
+		from `tabTrip` t
+		join `tabEmployee` e on e.name = t.driver
+		where
+			t.docstatus = 1
+			and t.total_expense > 0
+			{conditions}
+		order by
+			t.trip_date desc
+	""", filters, as_dict=True)
+
+	return data
 
 def get_summary(data):
     if not data:
