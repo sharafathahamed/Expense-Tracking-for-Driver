@@ -138,7 +138,7 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 doc_events={
-    "Material Request":{
+    "Stock Entry":{
         "on_submit":"learnapp.material_request_hooks.on_submit"
     }
 }
