@@ -7,9 +7,9 @@ def on_submit(doc, method):
 		t_warehouse = item.get("t_warehouse")
 		if not t_warehouse:
 			continue
-		if t_warehouse != route.source_warehouse:
+		if t_warehouse!=route.source_warehouse:
 			continue
-		qty = item.qty
+		qty=item.qty
 		create_stock_entry("Material Issue", route.source_company, item.item_code, qty,
 			s_warehouse=getDefWarehouse(route.source_company))
 
@@ -23,10 +23,10 @@ def on_submit(doc, method):
 			t_warehouse=getDefWarehouse(route.destination_company))
 		
 def create_stock_entry(entry_type, company, item_code, qty, s_warehouse=None, t_warehouse=None):
-	se = frappe.new_doc("Stock Entry")
+	se=frappe.new_doc("Stock Entry")
 	se.stock_entry_type = entry_type
 	se.company = company
-	item = {"item_code": item_code, "qty": qty}
+	item={"item_code": item_code, "qty": qty}
 	if s_warehouse:
 		item["s_warehouse"] = s_warehouse
 	if t_warehouse:
