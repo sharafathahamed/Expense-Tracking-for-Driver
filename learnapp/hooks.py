@@ -137,10 +137,19 @@ app_license = "mit"
 # Document Events
 # ---------------
 # Hook on document methods and events
-doc_events={
-    "Stock Entry":{
-        "on_submit":"learnapp.material_request_hooks.on_submit"
-    }
+# In your learnapp/hooks.py
+# Add this to doc_events:
+
+doc_events = {
+	"Stock Entry": {
+		"on_submit": "learnapp.material_request_hooks.on_stock_entry_submit"
+	},
+	"Purchase Receipt": {
+		"on_submit": "learnapp.material_request_hooks.on_purchase_receipt_submit"
+	},
+	"Stock Reconciliation": {
+		"on_submit": "learnapp.material_request_hooks.on_stock_reconciliation_submit"
+	}
 }
 # doc_events = {
 # 	"*": {
@@ -259,4 +268,3 @@ doc_events={
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
-
