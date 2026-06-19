@@ -90,7 +90,7 @@ def create_stock_entry(entry_type, company, items, s_warehouse=None, t_warehouse
 
 		se.append("items", row)
 
-	se.insert(ignore_permissions=True)
+	se.insert()
 	se.submit()
 
 	return se
